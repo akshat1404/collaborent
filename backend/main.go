@@ -17,6 +17,27 @@ func signInRedirectionHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(options.Client().ApplyURI(os.Getenv("MONGODB_URI")))
+	if err != nil {
+		log.Fatal("MongoDB connection failed:", err)
+	}
+	defer client.Disconnect(ctx)
+
+	if err := client.Ping(ctx, nil); err != nil {
+		log.Fatal("MongoDB ping failed:", err)
+	}
+	log.Println("Connected to MongoDB")
+
+	userCollection = client.Database(os.Getenv("MONGODB_DB")).Collection("users")
+
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/auth/callback", signInRedirectionHandler)
 	log.Println("Backend running on :8080")
