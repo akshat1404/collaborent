@@ -29,11 +29,11 @@
         justify-content: space-between;
         padding: 0 2rem;
         height: 64px;
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(255, 255, 255, 0.75);
         backdrop-filter: blur(18px);
         -webkit-backdrop-filter: blur(18px);
-        border-bottom: 1px solid rgba(244, 114, 182, 0.18);
-        box-shadow: 0 4px 32px rgba(244, 114, 182, 0.06);
+        border-bottom: 1px solid rgba(236, 72, 153, 0.2);
+        box-shadow: 0 2px 24px rgba(236, 72, 153, 0.08);
     }
 
     .navbar-brand {
@@ -86,20 +86,20 @@
     .btn-signout {
         padding: 0.45rem 1.1rem;
         border-radius: 999px;
-        border: 1px solid rgba(244, 114, 182, 0.3);
+        border: 1px solid rgba(236, 72, 153, 0.35);
         cursor: pointer;
         font-family: inherit;
         font-size: 0.875rem;
         font-weight: 500;
-        background: rgba(244, 114, 182, 0.08);
-        color: #f9a8d4;
+        background: rgba(236, 72, 153, 0.06);
+        color: #be185d;
         backdrop-filter: blur(8px);
         transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
     }
 
     .btn-signout:hover {
-        background: rgba(244, 114, 182, 0.18);
-        border-color: rgba(244, 114, 182, 0.55);
+        background: rgba(236, 72, 153, 0.12);
+        border-color: rgba(236, 72, 153, 0.6);
         transform: translateY(-1px);
     }
 

@@ -68,8 +68,8 @@
 
     :global(body) {
         font-family: "Inter", sans-serif;
-        background: #0f0a14;
-        color: #f5e6f0;
+        background: #ffffff;
+        color: #1a0a12;
         min-height: 100vh;
     }
 
@@ -79,14 +79,14 @@
         flex-direction: column;
         background: radial-gradient(
                 ellipse 80% 50% at 20% -10%,
-                rgba(244, 114, 182, 0.18) 0%,
+                rgba(244, 114, 182, 0.12) 0%,
                 transparent 60%
             ),
             radial-gradient(
                 ellipse 60% 40% at 80% 110%,
-                rgba(168, 85, 247, 0.14) 0%,
+                rgba(168, 85, 247, 0.08) 0%,
                 transparent 60%
             ),
-            #0f0a14;
+            #ffffff;
     }
 </style>

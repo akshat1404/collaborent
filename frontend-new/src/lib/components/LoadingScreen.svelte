@@ -19,7 +19,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #0f0a14;
+        background: #ffffff;
     }
 
     .spinner {
@@ -32,7 +32,7 @@
     }
 
     .redirect-text {
-        color: rgba(240, 171, 207, 0.6);
+        color: rgba(157, 23, 77, 0.55);
         font-size: 0.95rem;
     }
 

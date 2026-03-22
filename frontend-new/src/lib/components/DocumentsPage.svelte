@@ -96,10 +96,11 @@
         padding: 4rem 2rem;
         margin-top: 3rem;
         border-radius: 20px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px dashed rgba(244, 114, 182, 0.25);
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px dashed rgba(236, 72, 153, 0.3);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 4px 32px rgba(236, 72, 153, 0.07);
         text-align: center;
         animation: fadeUp 0.5s ease both;
     }
@@ -112,16 +113,16 @@
     .empty-title {
         font-size: 1.15rem;
         font-weight: 600;
-        color: #f0abcf;
+        color: #9d174d;
     }
 
     .empty-subtitle {
         font-size: 0.875rem;
-        color: rgba(240, 171, 207, 0.55);
+        color: rgba(157, 23, 77, 0.5);
     }
 
     .empty-subtitle strong {
-        color: rgba(240, 171, 207, 0.85);
+        color: #be185d;
         font-weight: 600;
     }
 
