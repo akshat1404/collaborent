@@ -4,7 +4,7 @@
 
 ---
 
-## ✨ Overview
+## Overview
 
 Collaborent is a real-time collaborative document editing platform. Users authenticate securely via Google OAuth (powered by Supabase), and their sessions are validated server-side by a Go backend before any data is persisted to MongoDB.
 
@@ -12,7 +12,7 @@ The project is intentionally kept full-stack and minimal at its core — authent
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌──────────────────────┐        ┌────────────────────────┐        ┌─────────────┐
@@ -31,7 +31,7 @@ The project is intentionally kept full-stack and minimal at its core — authent
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -44,7 +44,7 @@ The project is intentionally kept full-stack and minimal at its core — authent
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 collaborent/
@@ -71,7 +71,7 @@ collaborent/
 
 ---
 
-## 🔐 Authentication Flow
+## Authentication Flow
 
 1. User clicks **"Continue with Google"** on the landing page.
 2. Supabase handles the OAuth redirect and issues a signed **JWT**.
@@ -81,12 +81,12 @@ collaborent/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-- **Go** ≥ 1.22
-- **Node.js** ≥ 18
+- **Go** >= 1.22
+- **Node.js** >= 18
 - A **Supabase** project with Google OAuth enabled
 - A **MongoDB** cluster (Atlas free tier works fine)
 
@@ -138,7 +138,7 @@ PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
 
 ---
 
-## 📡 Backend API
+## Backend API
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -149,11 +149,11 @@ All endpoints use CORS middleware permitting `http://localhost:5173` during deve
 
 ---
 
-## ✍️ Behind the Build — Articles on Medium
+## Behind the Build — Articles on Medium
 
 I document the engineering decisions and concepts behind this project on Medium.
 
-**[@akshatmtiwari on Medium](https://medium.com/@akshatmtiwari)**
+[@akshatmtiwari on Medium](https://medium.com/@akshatmtiwari)
 
 | # | Article |
 |---|---|
@@ -162,7 +162,7 @@ I document the engineering decisions and concepts behind this project on Medium.
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 - [x] Google OAuth authentication (Supabase)
 - [x] JWT validation in Go backend
@@ -174,6 +174,6 @@ I document the engineering decisions and concepts behind this project on Medium.
 
 ---
 
-## 📄 License
+## License
 
 MIT — feel free to use this as a reference for your own full-stack SvelteKit + Go projects.
