@@ -42,8 +42,15 @@
     }
 
     function handleCreate(title: string) {
-        // TODO: call backend to create document
-        console.log("Creating document:", title);
+        fetch("http://localhost:8080/documents/create", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${user.access_token}`,
+            },
+            body: JSON.stringify({ title }),
+        });
+
         showModal = false;
     }
 </script>

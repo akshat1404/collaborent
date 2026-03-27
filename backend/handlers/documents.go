@@ -26,8 +26,14 @@ func (h *DocumentHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	title := r.FormValue("title")
+	if title == "" {
+		http.Error(w, "Title is required", http.StatusBadRequest)
+		return
+	}
+
 	doc := models.Document{
-		Title: "Untitled Document",
+		Title: title,
 		Content: map[string]interface{}{
 			"type": "doc",
 			"content": []map[string]interface{}{
