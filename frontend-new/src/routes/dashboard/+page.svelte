@@ -66,7 +66,6 @@
         }
 
         const doc = await res.json();
-
         showModal = false;
         window.location.href = `/document/${doc.id}`;
     }

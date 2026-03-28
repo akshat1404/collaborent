@@ -57,6 +57,16 @@ func main() {
 	}))
 	http.HandleFunc("/auth/callback", cors(authHandler.Callback))
 	http.HandleFunc("/documents/create", cors(auth(documentHandler.Create)))
+	http.HandleFunc("/documents/", cors(auth(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			documentHandler.GetByID(w, r)
+		case http.MethodPut:
+			documentHandler.Update(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})))
 
 	log.Println("Backend running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
