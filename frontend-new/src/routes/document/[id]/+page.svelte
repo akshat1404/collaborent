@@ -46,6 +46,26 @@
 	let currentColor = $state("#000000");
 	let currentFontSize = $state("16px");
 
+	// ── Bubble menu ──────────────────────────────
+	let showBubble = $state(false);
+	let bubbleX = $state(0);
+	let bubbleY = $state(0);
+	let bubbleInner = $state<HTMLDivElement | null>(null);
+
+	function updateBubble(e: Editor) {
+		const { from, to } = e.state.selection;
+		if (from === to) { showBubble = false; return; }
+		const sel = window.getSelection();
+		if (!sel || sel.rangeCount === 0 || sel.isCollapsed) { showBubble = false; return; }
+		const rect = sel.getRangeAt(0).getBoundingClientRect();
+		if (!rect.width) { showBubble = false; return; }
+		// Clamp X so bubble never clips the viewport edges
+		const halfW = 160; // approx half of bubble width
+		bubbleX = Math.min(Math.max(rect.left + rect.width / 2, halfW), window.innerWidth - halfW);
+		bubbleY = rect.top - 10; // 10px gap above selection
+		showBubble = true;
+	}
+
 	const fontSizes = [
 		"12px",
 		"14px",
@@ -103,6 +123,11 @@
 			onTransaction({ editor: e }) {
 				editor = e;
 				scheduleSave();
+				updateBubble(e);
+			},
+			onSelectionUpdate({ editor: e }) {
+				editor = e;
+				updateBubble(e);
 			},
 		});
 	});
@@ -355,6 +380,86 @@
 		</div>
 	</main>
 </div>
+
+<!-- ── Floating bubble menu ── -->
+{#if showBubble && editor}
+	<div
+		class="bubble-menu"
+		role="toolbar"
+		aria-label="Text formatting"
+		tabindex="-1"
+		style="left: {bubbleX}px; top: {bubbleY}px;"
+		onmousedown={(e) => e.preventDefault()}
+	>
+		<button
+			class="bubble-arrow"
+			onclick={() => bubbleInner?.scrollBy({ left: -88, behavior: 'smooth' })}
+			title="Scroll left"
+		>‹</button>
+
+		<div class="bubble-inner" bind:this={bubbleInner}>
+			<button class="bb" class:on={isBold}
+				onclick={() => editor?.chain().focus().toggleBold().run()}
+				title="Bold"><strong>B</strong></button>
+
+			<button class="bb" class:on={isItalic}
+				onclick={() => editor?.chain().focus().toggleItalic().run()}
+				title="Italic"><em>I</em></button>
+
+			<button class="bb" class:on={isUnderline}
+				onclick={() => editor?.chain().focus().toggleUnderline().run()}
+				title="Underline"><span style="text-decoration:underline">U</span></button>
+
+			<button class="bb" class:on={isStrike}
+				onclick={() => editor?.chain().focus().toggleStrike().run()}
+				title="Strikethrough"><span style="text-decoration:line-through">S</span></button>
+
+			<div class="bb-divider"></div>
+
+			<button class="bb" class:on={isH1}
+				onclick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
+				title="Heading 1">H1</button>
+
+			<button class="bb" class:on={isH2}
+				onclick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+				title="Heading 2">H2</button>
+
+			<button class="bb" class:on={isH3}
+				onclick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
+				title="Heading 3">H3</button>
+
+			<div class="bb-divider"></div>
+
+			<button class="bb" class:on={isAlignLeft}
+				onclick={() => editor?.chain().focus().setTextAlign('left').run()}
+				title="Align left">≡L</button>
+
+			<button class="bb" class:on={isAlignCenter}
+				onclick={() => editor?.chain().focus().setTextAlign('center').run()}
+				title="Align center">≡C</button>
+
+			<button class="bb" class:on={isAlignRight}
+				onclick={() => editor?.chain().focus().setTextAlign('right').run()}
+				title="Align right">≡R</button>
+
+			<div class="bb-divider"></div>
+
+			<button class="bb" class:on={isBulletList}
+				onclick={() => editor?.chain().focus().toggleBulletList().run()}
+				title="Bullet list">• —</button>
+
+			<button class="bb" class:on={isOrderedList}
+				onclick={() => editor?.chain().focus().toggleOrderedList().run()}
+				title="Ordered list">1. —</button>
+		</div>
+
+		<button
+			class="bubble-arrow"
+			onclick={() => bubbleInner?.scrollBy({ left: 88, behavior: 'smooth' })}
+			title="Scroll right"
+		>›</button>
+	</div>
+{/if}
 
 <style>
 	:global(*, *::before, *::after) {
@@ -660,5 +765,117 @@
 		pointer-events: none;
 		float: left;
 		height: 0;
+	}
+
+	/* ── Floating bubble menu ─────────────────────── */
+	:global(.bubble-menu) {
+		position: fixed;
+		z-index: 9000;
+		transform: translate(-50%, calc(-100% - 6px));
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		background: rgba(18, 6, 28, 0.88);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
+		border: 1px solid rgba(168, 85, 247, 0.25);
+		border-radius: 12px;
+		padding: 4px 6px;
+		box-shadow:
+			0 6px 24px rgba(0, 0, 0, 0.35),
+			0 0 0 1px rgba(244, 114, 182, 0.08);
+		pointer-events: all;
+		/* Small downward caret */
+		filter: drop-shadow(0 2px 6px rgba(168, 85, 247, 0.2));
+		animation: bubblePop 0.15s ease both;
+	}
+
+	:global(.bubble-menu::after) {
+		content: '';
+		position: absolute;
+		bottom: -6px;
+		left: 50%;
+		transform: translateX(-50%);
+		border: 6px solid transparent;
+		border-top-color: rgba(18, 6, 28, 0.88);
+		border-bottom: none;
+	}
+
+	/* Scrollable track — hides the scrollbar */
+	:global(.bubble-inner) {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		overflow-x: auto;
+		max-width: 260px;
+		scrollbar-width: none;
+	}
+	:global(.bubble-inner::-webkit-scrollbar) {
+		display: none;
+	}
+
+	/* Individual tool button */
+	:global(.bb) {
+		flex-shrink: 0;
+		min-width: 30px;
+		height: 30px;
+		padding: 0 7px;
+		border: none;
+		border-radius: 7px;
+		background: transparent;
+		color: rgba(255, 255, 255, 0.75);
+		font-family: "Inter", sans-serif;
+		font-size: 12px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.12s, color 0.12s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	:global(.bb:hover) {
+		background: rgba(168, 85, 247, 0.2);
+		color: #fff;
+	}
+	:global(.bb.on) {
+		background: linear-gradient(135deg, #f472b4 0%, #a855f7 100%);
+		color: #fff;
+		box-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+	}
+
+	/* Vertical divider between groups */
+	:global(.bb-divider) {
+		width: 1px;
+		height: 18px;
+		background: rgba(255, 255, 255, 0.12);
+		flex-shrink: 0;
+		margin: 0 2px;
+	}
+
+	/* ‹ › scroll navigation arrows */
+	:global(.bubble-arrow) {
+		flex-shrink: 0;
+		width: 22px;
+		height: 30px;
+		border: none;
+		border-radius: 6px;
+		background: transparent;
+		color: rgba(255, 255, 255, 0.45);
+		font-size: 16px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: color 0.12s, background 0.12s;
+		padding: 0;
+	}
+	:global(.bubble-arrow:hover) {
+		color: #f472b4;
+		background: rgba(244, 114, 182, 0.12);
+	}
+
+	@keyframes bubblePop {
+		from { opacity: 0; transform: translate(-50%, calc(-100% - 2px)) scale(0.95); }
+		to   { opacity: 1; transform: translate(-50%, calc(-100% - 6px)) scale(1); }
 	}
 </style>
