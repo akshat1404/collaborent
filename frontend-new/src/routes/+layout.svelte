@@ -7,6 +7,7 @@
 	let cursorY = $state(-400);
 	let isVisible = $state(false);
 	let isOverButton = $state(false);
+	let isOverEditor = $state(false);
 	let isMoving = $state(false);
 	let rotAngle = $state(0); // degrees, direction of travel
 
@@ -77,9 +78,9 @@
 			prevX = e.clientX;
 			prevY = e.clientY;
 
-			// Spawn dot-tentacles (suppressed while over a button)
+			// Spawn dot-tentacles (suppressed while over a button or the editor)
 			const now = Date.now();
-			if (!isOverButton && speed > 3 && now - lastSpawn > 18) {
+			if (!isOverButton && !isOverEditor && speed > 3 && now - lastSpawn > 18) {
 				lastSpawn = now;
 				const trailRad = moveRad + Math.PI; // opposite = behind
 
@@ -128,23 +129,23 @@
 			isVisible = false;
 		};
 
-		// Button / input hover detection via event delegation
+		// Button / input / select hover detection via event delegation
 		const handleMouseOver = (e: MouseEvent) => {
-			if (
-				(e.target as Element).closest(
-					'button, input, a[role="button"], [data-cursor-glow]',
-				)
-			) {
+			const t = e.target as Element;
+			if (t.closest('button, input, select, a[role="button"], [data-cursor-glow]')) {
 				isOverButton = true;
+			}
+			if (t.closest('[data-cursor-text]')) {
+				isOverEditor = true;
 			}
 		};
 		const handleMouseOut = (e: MouseEvent) => {
-			if (
-				(e.target as Element).closest(
-					'button, input, a[role="button"], [data-cursor-glow]',
-				)
-			) {
+			const t = e.target as Element;
+			if (t.closest('button, input, select, a[role="button"], [data-cursor-glow]')) {
 				isOverButton = false;
+			}
+			if (t.closest('[data-cursor-text]')) {
+				isOverEditor = false;
 			}
 		};
 
@@ -176,7 +177,7 @@
 
 {#if isVisible}
 	<!-- Dot tentacle particles — hidden while over a button -->
-	{#if !isOverButton}
+	{#if !isOverButton && !isOverEditor}
 		{#each dots as dot (dot.id)}
 			<div
 				class="jelly-dot"
@@ -195,7 +196,7 @@
 	<!-- Orb: hidden when over a button -->
 	<div
 		class="orb-pos"
-		class:orb-hidden={isOverButton}
+		class:orb-hidden={isOverButton || isOverEditor}
 		style="left: {cursorX}px; top: {cursorY}px;"
 	>
 		<div class="orb" class:moving={isMoving}></div>
@@ -211,6 +212,12 @@
 	}
 	:global(a, button, input, textarea, select, [role="button"]) {
 		cursor: none;
+	}
+
+	/* ── Editor area: restore native text cursor ── */
+	:global([data-cursor-text]),
+	:global([data-cursor-text] *) {
+		cursor: text !important;
 	}
 
 	/* ── Position wrapper: tracks cursor with no lag ── */

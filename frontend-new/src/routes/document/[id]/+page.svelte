@@ -350,7 +350,7 @@
 			</span>
 		</header>
 
-		<div class="editor-wrapper">
+		<div class="editor-wrapper" data-cursor-text>
 			<div class="editor-el" bind:this={editorEl}></div>
 		</div>
 	</main>
