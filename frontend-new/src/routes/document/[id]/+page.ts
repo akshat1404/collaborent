@@ -15,7 +15,7 @@ export const load: PageLoad = async ({ params }) => {
 		throw redirect(302, '/');
 	}
 
-	const res = await fetch(`http://localhost:8080/documents/${id}`, {
+	const res = await fetch(`${import.meta.env.VITE_API_URL}/documents/${id}`, {
 		headers: {
 			Authorization: `Bearer ${session.access_token}`
 		}

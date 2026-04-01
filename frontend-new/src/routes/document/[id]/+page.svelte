@@ -54,14 +54,26 @@
 
 	function updateBubble(e: Editor) {
 		const { from, to } = e.state.selection;
-		if (from === to) { showBubble = false; return; }
+		if (from === to) {
+			showBubble = false;
+			return;
+		}
 		const sel = window.getSelection();
-		if (!sel || sel.rangeCount === 0 || sel.isCollapsed) { showBubble = false; return; }
+		if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+			showBubble = false;
+			return;
+		}
 		const rect = sel.getRangeAt(0).getBoundingClientRect();
-		if (!rect.width) { showBubble = false; return; }
+		if (!rect.width) {
+			showBubble = false;
+			return;
+		}
 		// Clamp X so bubble never clips the viewport edges
 		const halfW = 160; // approx half of bubble width
-		bubbleX = Math.min(Math.max(rect.left + rect.width / 2, halfW), window.innerWidth - halfW);
+		bubbleX = Math.min(
+			Math.max(rect.left + rect.width / 2, halfW),
+			window.innerWidth - halfW,
+		);
 		bubbleY = rect.top - 10; // 10px gap above selection
 		showBubble = true;
 	}
@@ -90,7 +102,7 @@
 				data: { session },
 			} = await supabase.auth.getSession();
 
-			await fetch(`http://localhost:8080/documents/${docId}`, {
+			await fetch(`${import.meta.env.VITE_API_URL}/documents/${docId}`, {
 				method: "PUT",
 				headers: {
 					"Content-Type": "application/json",
@@ -393,71 +405,118 @@
 	>
 		<button
 			class="bubble-arrow"
-			onclick={() => bubbleInner?.scrollBy({ left: -88, behavior: 'smooth' })}
-			title="Scroll left"
-		>‹</button>
+			onclick={() =>
+				bubbleInner?.scrollBy({ left: -88, behavior: "smooth" })}
+			title="Scroll left">‹</button
+		>
 
 		<div class="bubble-inner" bind:this={bubbleInner}>
-			<button class="bb" class:on={isBold}
+			<button
+				class="bb"
+				class:on={isBold}
 				onclick={() => editor?.chain().focus().toggleBold().run()}
-				title="Bold"><strong>B</strong></button>
+				title="Bold"><strong>B</strong></button
+			>
 
-			<button class="bb" class:on={isItalic}
+			<button
+				class="bb"
+				class:on={isItalic}
 				onclick={() => editor?.chain().focus().toggleItalic().run()}
-				title="Italic"><em>I</em></button>
+				title="Italic"><em>I</em></button
+			>
 
-			<button class="bb" class:on={isUnderline}
+			<button
+				class="bb"
+				class:on={isUnderline}
 				onclick={() => editor?.chain().focus().toggleUnderline().run()}
-				title="Underline"><span style="text-decoration:underline">U</span></button>
+				title="Underline"
+				><span style="text-decoration:underline">U</span></button
+			>
 
-			<button class="bb" class:on={isStrike}
+			<button
+				class="bb"
+				class:on={isStrike}
 				onclick={() => editor?.chain().focus().toggleStrike().run()}
-				title="Strikethrough"><span style="text-decoration:line-through">S</span></button>
+				title="Strikethrough"
+				><span style="text-decoration:line-through">S</span></button
+			>
 
 			<div class="bb-divider"></div>
 
-			<button class="bb" class:on={isH1}
-				onclick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
-				title="Heading 1">H1</button>
+			<button
+				class="bb"
+				class:on={isH1}
+				onclick={() =>
+					editor?.chain().focus().toggleHeading({ level: 1 }).run()}
+				title="Heading 1">H1</button
+			>
 
-			<button class="bb" class:on={isH2}
-				onclick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-				title="Heading 2">H2</button>
+			<button
+				class="bb"
+				class:on={isH2}
+				onclick={() =>
+					editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+				title="Heading 2">H2</button
+			>
 
-			<button class="bb" class:on={isH3}
-				onclick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
-				title="Heading 3">H3</button>
-
-			<div class="bb-divider"></div>
-
-			<button class="bb" class:on={isAlignLeft}
-				onclick={() => editor?.chain().focus().setTextAlign('left').run()}
-				title="Align left">≡L</button>
-
-			<button class="bb" class:on={isAlignCenter}
-				onclick={() => editor?.chain().focus().setTextAlign('center').run()}
-				title="Align center">≡C</button>
-
-			<button class="bb" class:on={isAlignRight}
-				onclick={() => editor?.chain().focus().setTextAlign('right').run()}
-				title="Align right">≡R</button>
+			<button
+				class="bb"
+				class:on={isH3}
+				onclick={() =>
+					editor?.chain().focus().toggleHeading({ level: 3 }).run()}
+				title="Heading 3">H3</button
+			>
 
 			<div class="bb-divider"></div>
 
-			<button class="bb" class:on={isBulletList}
+			<button
+				class="bb"
+				class:on={isAlignLeft}
+				onclick={() =>
+					editor?.chain().focus().setTextAlign("left").run()}
+				title="Align left">≡L</button
+			>
+
+			<button
+				class="bb"
+				class:on={isAlignCenter}
+				onclick={() =>
+					editor?.chain().focus().setTextAlign("center").run()}
+				title="Align center">≡C</button
+			>
+
+			<button
+				class="bb"
+				class:on={isAlignRight}
+				onclick={() =>
+					editor?.chain().focus().setTextAlign("right").run()}
+				title="Align right">≡R</button
+			>
+
+			<div class="bb-divider"></div>
+
+			<button
+				class="bb"
+				class:on={isBulletList}
 				onclick={() => editor?.chain().focus().toggleBulletList().run()}
-				title="Bullet list">• —</button>
+				title="Bullet list">• —</button
+			>
 
-			<button class="bb" class:on={isOrderedList}
-				onclick={() => editor?.chain().focus().toggleOrderedList().run()}
-				title="Ordered list">1. —</button>
+			<button
+				class="bb"
+				class:on={isOrderedList}
+				onclick={() =>
+					editor?.chain().focus().toggleOrderedList().run()}
+				title="Ordered list">1. —</button
+			>
 		</div>
 
 		<button
 			class="bubble-arrow"
-			onclick={() => bubbleInner?.scrollBy({ left: 88, behavior: 'smooth' })}
-			title="Scroll right"
-		>›</button>
+			onclick={() =>
+				bubbleInner?.scrollBy({ left: 88, behavior: "smooth" })}
+			title="Scroll right">›</button
+		>
 	</div>
 {/if}
 
@@ -482,7 +541,7 @@
 
 	/* ── Sidebar ─────────────────────────────────── */
 	.sidebar {
-		width: 20%;
+		width: 16%;
 		min-width: 180px;
 		background: #f8f8f8;
 		border-right: 1px solid #ede8f0;
@@ -791,7 +850,7 @@
 	}
 
 	:global(.bubble-menu::after) {
-		content: '';
+		content: "";
 		position: absolute;
 		bottom: -6px;
 		left: 50%;
@@ -828,7 +887,9 @@
 		font-size: 12px;
 		font-weight: 600;
 		cursor: pointer;
-		transition: background 0.12s, color 0.12s;
+		transition:
+			background 0.12s,
+			color 0.12s;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -866,7 +927,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: color 0.12s, background 0.12s;
+		transition:
+			color 0.12s,
+			background 0.12s;
 		padding: 0;
 	}
 	:global(.bubble-arrow:hover) {
@@ -875,7 +938,13 @@
 	}
 
 	@keyframes bubblePop {
-		from { opacity: 0; transform: translate(-50%, calc(-100% - 2px)) scale(0.95); }
-		to   { opacity: 1; transform: translate(-50%, calc(-100% - 6px)) scale(1); }
+		from {
+			opacity: 0;
+			transform: translate(-50%, calc(-100% - 2px)) scale(0.95);
+		}
+		to {
+			opacity: 1;
+			transform: translate(-50%, calc(-100% - 6px)) scale(1);
+		}
 	}
 </style>

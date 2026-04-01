@@ -80,7 +80,12 @@
 
 			// Spawn dot-tentacles (suppressed while over a button or the editor)
 			const now = Date.now();
-			if (!isOverButton && !isOverEditor && speed > 3 && now - lastSpawn > 18) {
+			if (
+				!isOverButton &&
+				!isOverEditor &&
+				speed > 3 &&
+				now - lastSpawn > 18
+			) {
 				lastSpawn = now;
 				const trailRad = moveRad + Math.PI; // opposite = behind
 
@@ -132,19 +137,27 @@
 		// Button / input / select hover detection via event delegation
 		const handleMouseOver = (e: MouseEvent) => {
 			const t = e.target as Element;
-			if (t.closest('button, input, select, a[role="button"], [data-cursor-glow]')) {
+			if (
+				t.closest(
+					'button, input, select, a[role="button"], [data-cursor-glow], card-body',
+				)
+			) {
 				isOverButton = true;
 			}
-			if (t.closest('[data-cursor-text]')) {
+			if (t.closest("[data-cursor-text]")) {
 				isOverEditor = true;
 			}
 		};
 		const handleMouseOut = (e: MouseEvent) => {
 			const t = e.target as Element;
-			if (t.closest('button, input, select, a[role="button"], [data-cursor-glow]')) {
+			if (
+				t.closest(
+					'button, input, select, a[role="button"], [data-cursor-glow]',
+				)
+			) {
 				isOverButton = false;
 			}
-			if (t.closest('[data-cursor-text]')) {
+			if (t.closest("[data-cursor-text]")) {
 				isOverEditor = false;
 			}
 		};
@@ -267,8 +280,6 @@
 		}
 	}
 
-
-
 	/* ── The orb — always a perfect sphere ── */
 	.orb {
 		width: 18px;
@@ -345,7 +356,8 @@
 
 	/* Fast breathe while cursor is in motion */
 	@keyframes sphere-breathe-fast {
-		0%, 100% {
+		0%,
+		100% {
 			transform: scale(1);
 			box-shadow:
 				0 0 5px 2px rgba(236, 72, 153, 0.6),

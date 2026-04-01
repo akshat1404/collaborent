@@ -8,7 +8,7 @@
 </script>
 
 <nav class="navbar">
-    <span class="navbar-brand" data-cursor-glow>Collaborent</span>
+    <span class="navbar-brand">Collaborent</span>
     <div class="navbar-actions">
         <button class="btn-create" id="create-doc-btn" onclick={onCreateDoc}>
             <span class="btn-icon">+</span> Create
@@ -41,7 +41,6 @@
         font-size: 1.35rem;
         font-weight: 700;
         letter-spacing: -0.5px;
-        border-radius: 999px;
         background: linear-gradient(135deg, #f9a8d4, #e879f9);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -68,7 +67,9 @@
         background: linear-gradient(135deg, #ec4899, #a855f7);
         color: #fff;
         box-shadow: 0 0 18px rgba(236, 72, 153, 0.35);
-        transition: transform 0.18s ease, box-shadow 0.18s ease;
+        transition:
+            transform 0.18s ease,
+            box-shadow 0.18s ease;
     }
 
     .btn-create:hover {
@@ -96,7 +97,10 @@
         background: rgba(236, 72, 153, 0.06);
         color: #be185d;
         backdrop-filter: blur(8px);
-        transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+        transition:
+            background 0.18s ease,
+            border-color 0.18s ease,
+            transform 0.18s ease;
     }
 
     .btn-signout:hover {

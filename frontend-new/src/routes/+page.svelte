@@ -11,7 +11,7 @@
 
         if (session) {
             const response = await fetch(
-                "http://localhost:8080/auth/callback",
+                `${import.meta.env.VITE_API_URL}/auth/callback`,
                 {
                     method: "POST",
                     headers: {
@@ -33,7 +33,7 @@
         const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: "http://localhost:5173",
+                redirectTo: `${import.meta.env.VITE_SVELTE_DOMAIN}`,
             },
         });
         if (error) console.error(error);

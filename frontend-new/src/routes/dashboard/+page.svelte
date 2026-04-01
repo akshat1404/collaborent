@@ -18,7 +18,7 @@
             const {
                 data: { session },
             } = await supabase.auth.getSession();
-            const res = await fetch("http://localhost:8080/documents", {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/documents`, {
                 headers: { Authorization: `Bearer ${session?.access_token}` },
             });
             if (res.ok) documents = await res.json();
@@ -69,7 +69,7 @@
             data: { session },
         } = await supabase.auth.getSession();
 
-        const res = await fetch("http://localhost:8080/documents/create", {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/documents/create`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
