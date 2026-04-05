@@ -16,8 +16,9 @@ func NewAIHandler() *AIHandler {
 }
 
 type aiProcessRequest struct {
-	Text   string `json:"text"`
-	Action string `json:"action"`
+	Text         string `json:"text"`
+	Action       string `json:"action"`
+	CustomPrompt string `json:"customPrompt"`
 }
 
 type groqMessage struct {
@@ -38,7 +39,7 @@ type groqResponse struct {
 	Choices []groqChoice `json:"choices"`
 }
 
-func buildPrompt(action, text string) (string, error) {
+func buildPrompt(action, text, customPrompt string) (string, error) {
 	switch action {
 	case "fix grammar":
 		return fmt.Sprintf("Fix grammatical mistakes. Return only corrected text:\n\n%s", text), nil
@@ -48,6 +49,11 @@ func buildPrompt(action, text string) (string, error) {
 		return fmt.Sprintf("Convert to a markdown table. Return only the table:\n\n%s", text), nil
 	case "summarise":
 		return fmt.Sprintf("Summarise in 2-3 sentences. Return only the summary:\n\n%s", text), nil
+	case "custom":
+		if customPrompt == "" {
+			return "", fmt.Errorf("customPrompt is required for custom action")
+		}
+		return fmt.Sprintf("%s\n\n%s", customPrompt, text), nil
 	default:
 		return "", fmt.Errorf("unknown action: %s", action)
 	}
@@ -69,7 +75,7 @@ func (h *AIHandler) Process(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	prompt, err := buildPrompt(req.Action, req.Text)
+	prompt, err := buildPrompt(req.Action, req.Text, req.CustomPrompt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

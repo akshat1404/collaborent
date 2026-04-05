@@ -58,22 +58,28 @@
 	let bubbleInner = $state<HTMLDivElement | null>(null);
 
 	// AI bubble state
-	let aiLoading = $state<string | null>(null); // which action is loading
+	let aiLoading = $state<string | null>(null);            // which action is loading
+	let aiCustomPrompt = $state("");                        // free-text Ask AI prompt
+	let savedSelection = $state<{ from: number; to: number } | null>(null); // locked selection
+	let showAskModal = $state(false);                       // Ask AI modal visibility
 
 	function updateBubble(e: Editor) {
 		const { from, to } = e.state.selection;
 		if (from === to) {
 			showBubble = false;
+			if (!showAskModal) savedSelection = null;
 			return;
 		}
 		const sel = window.getSelection();
 		if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
 			showBubble = false;
+			savedSelection = null;
 			return;
 		}
 		const rect = sel.getRangeAt(0).getBoundingClientRect();
 		if (!rect.width) {
 			showBubble = false;
+			savedSelection = null;
 			return;
 		}
 		// Clamp X so bubble never clips the viewport edges
@@ -83,6 +89,9 @@
 			window.innerWidth - halfW,
 		);
 		bubbleY = rect.top - 10; // 10px gap above selection
+		// Save the current selection so AI actions can use it even after
+		// the editor loses focus (e.g. when the Ask AI input is focused).
+		savedSelection = { from, to };
 		showBubble = true;
 	}
 
@@ -242,7 +251,9 @@
 	async function runAI(action: string) {
 		if (!editor || aiLoading) return;
 
-		const { from, to } = editor.state.selection;
+		// Use the saved selection (in case editor lost focus)
+		const sel = savedSelection ?? { from: editor.state.selection.from, to: editor.state.selection.to };
+		const { from, to } = sel;
 		if (from === to) return;
 
 		const selectedText = editor.state.doc.textBetween(from, to, " ");
@@ -272,9 +283,11 @@
 			if (result) {
 				// Convert markdown to HTML so TipTap renders tables, bold, etc.
 				const html = marked.parse(result) as string;
+				// Restore the saved selection before replacing
 				editor
 					.chain()
 					.focus()
+					.setTextSelection({ from, to })
 					.deleteSelection()
 					.insertContent(html)
 					.run();
@@ -284,7 +297,70 @@
 		} finally {
 			aiLoading = null;
 			showBubble = false;
+			savedSelection = null;
 		}
+	}
+
+	async function askAI() {
+		const prompt = aiCustomPrompt.trim();
+		if (!editor || !prompt || aiLoading) return;
+
+		// Use the saved selection (editor focus was lost when modal opened)
+		const sel = savedSelection ?? { from: editor.state.selection.from, to: editor.state.selection.to };
+		const { from, to } = sel;
+		if (from === to) return;
+
+		const selectedText = editor.state.doc.textBetween(from, to, " ");
+		if (!selectedText.trim()) return;
+
+		aiLoading = "custom";
+		try {
+			const {
+				data: { session },
+			} = await supabase.auth.getSession();
+
+			const res = await fetch(`${import.meta.env.VITE_API_URL}/ai/process`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${session?.access_token}`,
+				},
+				body: JSON.stringify({ text: selectedText, action: "custom", customPrompt: prompt }),
+			});
+
+			if (!res.ok) {
+				console.error("AI request failed:", await res.text());
+				return;
+			}
+
+			const { result } = await res.json();
+			if (result) {
+				const html = marked.parse(result) as string;
+				// Restore the saved selection before replacing
+				editor
+					.chain()
+					.focus()
+					.setTextSelection({ from, to })
+					.deleteSelection()
+					.insertContent(html)
+					.run();
+			}
+			aiCustomPrompt = "";
+		} catch (err) {
+			console.error("AI error:", err);
+		} finally {
+			aiLoading = null;
+			showBubble = false;
+			showAskModal = false;
+			savedSelection = null;
+		}
+	}
+
+	function openAskModal() {
+		// savedSelection is already set from when the bubble appeared.
+		// Close the bubble and open the modal — no focus-loss risk.
+		showBubble = false;
+		showAskModal = true;
 	}
 </script>
 
@@ -658,65 +734,6 @@
 					editor?.chain().focus().toggleOrderedList().run()}
 				title="Ordered list">1. —</button
 			>
-
-			<div class="bb-divider"></div>
-
-			<!-- ── AI Actions ── -->
-			<button
-				class="bb ai-btn"
-				class:ai-loading={aiLoading === 'fix grammar'}
-				disabled={!!aiLoading}
-				onclick={() => runAI('fix grammar')}
-				title="Fix grammar"
-			>
-				{#if aiLoading === 'fix grammar'}
-					<span class="ai-spin">⟳</span>
-				{:else}
-					✦ Fix
-				{/if}
-			</button>
-
-			<button
-				class="bb ai-btn"
-				class:ai-loading={aiLoading === 'translate to Hindi'}
-				disabled={!!aiLoading}
-				onclick={() => runAI('translate to Hindi')}
-				title="Translate to Hindi"
-			>
-				{#if aiLoading === 'translate to Hindi'}
-					<span class="ai-spin">⟳</span>
-				{:else}
-					✦ HI
-				{/if}
-			</button>
-
-			<button
-				class="bb ai-btn"
-				class:ai-loading={aiLoading === 'make a table'}
-				disabled={!!aiLoading}
-				onclick={() => runAI('make a table')}
-				title="Make a table"
-			>
-				{#if aiLoading === 'make a table'}
-					<span class="ai-spin">⟳</span>
-				{:else}
-					✦ ⊞
-				{/if}
-			</button>
-
-			<button
-				class="bb ai-btn"
-				class:ai-loading={aiLoading === 'summarise'}
-				disabled={!!aiLoading}
-				onclick={() => runAI('summarise')}
-				title="Summarise"
-			>
-				{#if aiLoading === 'summarise'}
-					<span class="ai-spin">⟳</span>
-				{:else}
-					✦ ∑
-				{/if}
-			</button>
 		</div>
 
 		<button
@@ -725,6 +742,138 @@
 				bubbleInner?.scrollBy({ left: 88, behavior: "smooth" })}
 			title="Scroll right">›</button
 		>
+	</div>
+{/if}
+
+<!-- ── AI Bubble (separate tooltip above the format bubble) ── -->
+{#if showBubble && editor}
+	<div
+		class="ai-bubble"
+		role="toolbar"
+		aria-label="AI actions"
+		tabindex="-1"
+		style="left: {bubbleX}px; top: {bubbleY - 54}px;"
+		onmousedown={(e) => e.preventDefault()}
+	>
+		<button
+			class="ai-bubble-btn"
+			class:ai-bbl-loading={aiLoading === 'fix grammar'}
+			disabled={!!aiLoading}
+			onclick={() => runAI('fix grammar')}
+			title="Fix grammar"
+		>
+			{#if aiLoading === 'fix grammar'}
+				<span class="ai-spin">⟳</span>
+			{:else}
+				✦ Fix
+			{/if}
+		</button>
+
+		<button
+			class="ai-bubble-btn"
+			class:ai-bbl-loading={aiLoading === 'translate to Hindi'}
+			disabled={!!aiLoading}
+			onclick={() => runAI('translate to Hindi')}
+			title="Translate to Hindi"
+		>
+			{#if aiLoading === 'translate to Hindi'}
+				<span class="ai-spin">⟳</span>
+			{:else}
+				✦ HI
+			{/if}
+		</button>
+
+		<button
+			class="ai-bubble-btn"
+			class:ai-bbl-loading={aiLoading === 'make a table'}
+			disabled={!!aiLoading}
+			onclick={() => runAI('make a table')}
+			title="Make a table"
+		>
+			{#if aiLoading === 'make a table'}
+				<span class="ai-spin">⟳</span>
+			{:else}
+				✦ ⊞
+			{/if}
+		</button>
+
+		<button
+			class="ai-bubble-btn"
+			class:ai-bbl-loading={aiLoading === 'summarise'}
+			disabled={!!aiLoading}
+			onclick={() => runAI('summarise')}
+			title="Summarise"
+		>
+			{#if aiLoading === 'summarise'}
+				<span class="ai-spin">⟳</span>
+			{:else}
+				✦ ∑
+			{/if}
+		</button>
+
+		<div class="ai-bubble-sep"></div>
+
+		<button
+			class="ai-bubble-btn ai-ask-open-btn"
+			disabled={!!aiLoading}
+			onclick={openAskModal}
+			title="Ask AI a custom question"
+		>✦ Ask AI</button>
+	</div>
+{/if}
+
+<!-- ── Ask AI Modal ── -->
+{#if showAskModal}
+	<div
+		class="ask-modal-overlay"
+		onclick={() => { showAskModal = false; aiCustomPrompt = ""; }}
+		onkeydown={(e) => e.key === 'Escape' && (showAskModal = false)}
+		role="dialog"
+		aria-modal="true"
+		aria-label="Ask AI"
+		tabindex="-1"
+	>
+		<div
+			class="ask-modal"
+			onclick={(e) => e.stopPropagation()}
+			role="presentation"
+		>
+			<div class="ask-modal-header">
+				<span class="ask-modal-title">✦ Ask AI</span>
+				<button
+					class="ask-modal-close"
+					onclick={() => { showAskModal = false; aiCustomPrompt = ""; }}
+					aria-label="Close"
+				>✕</button>
+			</div>
+			<p class="ask-modal-hint">Describe what you'd like to do with the selected text.</p>
+			<textarea
+				class="ask-modal-input"
+				placeholder="e.g. This content is code, clean up the formatting…"
+				bind:value={aiCustomPrompt}
+				disabled={!!aiLoading}
+				rows="3"
+				onkeydown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askAI(); } }}
+			></textarea>
+			<div class="ask-modal-actions">
+				<button
+					class="ask-modal-cancel"
+					onclick={() => { showAskModal = false; aiCustomPrompt = ""; }}
+					disabled={!!aiLoading}
+				>Cancel</button>
+				<button
+					class="ask-modal-submit"
+					onclick={askAI}
+					disabled={!!aiLoading || !aiCustomPrompt.trim()}
+				>
+					{#if aiLoading === 'custom'}
+						<span class="ai-spin">⟳</span> Thinking…
+					{:else}
+						Apply
+					{/if}
+				</button>
+			</div>
+		</div>
 	</div>
 {/if}
 
@@ -1297,5 +1446,223 @@
 	:global(.ProseMirror tr:hover td) {
 		background: #f3e8ff55;
 	}
+
+	/* ── Standalone AI bubble ─────────────────────── */
+	:global(.ai-bubble) {
+		position: fixed;
+		z-index: 9001;
+		transform: translate(-50%, calc(-100% - 6px));
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		background: rgba(14, 4, 22, 0.92);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
+		border: 1px solid rgba(168, 85, 247, 0.45);
+		border-radius: 14px;
+		padding: 5px 8px;
+		box-shadow:
+			0 6px 28px rgba(0, 0, 0, 0.4),
+			0 0 0 1px rgba(244, 114, 182, 0.1),
+			0 0 18px rgba(168, 85, 247, 0.15);
+		pointer-events: all;
+		animation: bubblePop 0.15s ease both;
+		white-space: nowrap;
+	}
+
+	/* Small upward-pointing caret under AI bubble */
+	:global(.ai-bubble::after) {
+		content: "";
+		position: absolute;
+		bottom: -6px;
+		left: 50%;
+		transform: translateX(-50%);
+		border: 6px solid transparent;
+		border-top-color: rgba(14, 4, 22, 0.92);
+		border-bottom: none;
+	}
+
+	/* Quick-action buttons inside the AI bubble */
+	:global(.ai-bubble-btn) {
+		flex-shrink: 0;
+		height: 28px;
+		padding: 0 10px;
+		border: 1px solid rgba(168, 85, 247, 0.35);
+		border-radius: 8px;
+		background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(244, 114, 182, 0.08) 100%);
+		color: #e879f9;
+		font-family: "Inter", sans-serif;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		cursor: pointer;
+		transition: background 0.13s, color 0.13s, box-shadow 0.13s, opacity 0.13s;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+	:global(.ai-bubble-btn:hover:not(:disabled)) {
+		background: linear-gradient(135deg, rgba(168, 85, 247, 0.4) 0%, rgba(244, 114, 182, 0.25) 100%);
+		color: #fff;
+		border-color: rgba(168, 85, 247, 0.7);
+		box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+	}
+	:global(.ai-bubble-btn:disabled) {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	:global(.ai-bubble-btn.ai-bbl-loading) {
+		background: linear-gradient(135deg, #a855f7 0%, #f472b4 100%);
+		color: #fff;
+		border-color: transparent;
+		opacity: 1;
+	}
+
+	/* Vertical divider between quick-buttons and Ask AI */
+	:global(.ai-bubble-sep) {
+		width: 1px;
+		height: 20px;
+		background: rgba(168, 85, 247, 0.3);
+		flex-shrink: 0;
+		margin: 0 2px;
+	}
+
+	/* Ask AI open button (inside bubble) */
+	:global(.ai-ask-open-btn) {
+		background: linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(244, 114, 182, 0.15) 100%) !important;
+		border-color: rgba(168, 85, 247, 0.5) !important;
+		color: #fff !important;
+	}
+	:global(.ai-ask-open-btn:hover:not(:disabled)) {
+		background: linear-gradient(135deg, #a855f7 0%, #f472b4 100%) !important;
+		box-shadow: 0 0 14px rgba(168, 85, 247, 0.5) !important;
+	}
+
+	/* ── Ask AI Modal ─────────────────────────────── */
+	.ask-modal-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 10000;
+		background: rgba(10, 4, 18, 0.6);
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		animation: fadeIn 0.15s ease;
+	}
+	@keyframes fadeIn {
+		from { opacity: 0; }
+		to   { opacity: 1; }
+	}
+	.ask-modal {
+		background: #ffffff;
+		border-radius: 16px;
+		width: 480px;
+		max-width: 92vw;
+		padding: 28px;
+		box-shadow:
+			0 24px 60px rgba(0, 0, 0, 0.18),
+			0 0 0 1px rgba(168, 85, 247, 0.12);
+		animation: modalPop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+	}
+	@keyframes modalPop {
+		from { opacity: 0; transform: scale(0.92) translateY(8px); }
+		to   { opacity: 1; transform: scale(1) translateY(0); }
+	}
+	.ask-modal-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 8px;
+	}
+	.ask-modal-title {
+		font-size: 16px;
+		font-weight: 700;
+		color: #3d2a50;
+		background: linear-gradient(135deg, #a855f7, #f472b4);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+	.ask-modal-close {
+		width: 28px;
+		height: 28px;
+		border: none;
+		background: #f3e8ff;
+		color: #a855f7;
+		border-radius: 8px;
+		cursor: pointer;
+		font-size: 13px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: background 0.15s;
+	}
+	.ask-modal-close:hover { background: #e9d5ff; }
+	.ask-modal-hint {
+		font-size: 12px;
+		color: #8c7aa0;
+		margin-bottom: 14px;
+	}
+	.ask-modal-input {
+		width: 100%;
+		padding: 12px 14px;
+		border: 1.5px solid #e2d9ee;
+		border-radius: 10px;
+		background: #faf8fc;
+		color: #1a0a12;
+		font-family: "Inter", sans-serif;
+		font-size: 14px;
+		line-height: 1.5;
+		resize: vertical;
+		min-height: 80px;
+		outline: none;
+		transition: border-color 0.15s, box-shadow 0.15s;
+		margin-bottom: 16px;
+	}
+	.ask-modal-input:focus {
+		border-color: #a855f7;
+		box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.12);
+	}
+	.ask-modal-input:disabled { opacity: 0.6; }
+	.ask-modal-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 10px;
+	}
+	.ask-modal-cancel {
+		padding: 9px 18px;
+		border: 1px solid #e2d9ee;
+		border-radius: 9px;
+		background: #fff;
+		color: #8c7aa0;
+		font-family: "Inter", sans-serif;
+		font-size: 13px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+	.ask-modal-cancel:hover { background: #f3e8ff; color: #a855f7; }
+	.ask-modal-cancel:disabled { opacity: 0.5; cursor: not-allowed; }
+	.ask-modal-submit {
+		padding: 9px 22px;
+		border: none;
+		border-radius: 9px;
+		background: linear-gradient(135deg, #a855f7 0%, #f472b4 100%);
+		color: #fff;
+		font-family: "Inter", sans-serif;
+		font-size: 13px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: opacity 0.15s, box-shadow 0.15s;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.ask-modal-submit:hover:not(:disabled) {
+		box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
+	}
+	.ask-modal-submit:disabled { opacity: 0.45; cursor: not-allowed; }
 </style>
 
