@@ -3,8 +3,6 @@
     import * as mammoth from "mammoth";
     import * as pdfjsLib from "pdfjs-dist";
 
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
-
     interface Props {
         onClose: () => void;
         onCreate: (title: string, content?: string) => void;
@@ -39,7 +37,6 @@
 
         isProcessing = true;
 
-        // Auto-fill title from filename if empty
         if (!title.trim()) {
             title = file.name.replace(/\.[^/.]+$/, "");
         }
@@ -49,8 +46,19 @@
             let contentStr = "";
 
             if (file.name.toLowerCase().endsWith(".docx")) {
-                const result = await mammoth.convertToHtml({ arrayBuffer });
-                contentStr = result.value;
+                // Configure mammoth to skip images — TipTap has no image support
+                const result = await mammoth.convertToHtml(
+                    { arrayBuffer },
+                    {
+                        convertImage: mammoth.images.imgElement(() =>
+                            Promise.resolve({ src: "" })
+                        ),
+                    }
+                );
+
+                // Strip any remaining media elements that TipTap can't handle
+                contentStr = stripUnsupportedMedia(result.value);
+
             } else if (file.name.toLowerCase().endsWith(".pdf")) {
                 const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
                 const pdf = await loadingTask.promise;
@@ -59,30 +67,55 @@
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
-                    // Basic paragraphing logic based on string items
                     const textItems = textContent.items
+                        .filter((item: any) => typeof item.str === "string" && item.str.trim())
                         .map((item: any) => item.str)
                         .join(" ");
-                    contentStr += `<p>${textItems}</p>`;
+                    if (textItems.trim()) {
+                        contentStr += `<p>${textItems}</p>`;
+                    }
                 }
                 contentStr += "</div>";
+
             } else {
                 alert("Please select a valid .docx or .pdf file");
                 isProcessing = false;
                 return;
             }
 
-            // Fire onCreate immediately with the compiled content
+            if (!contentStr.replace(/<[^>]+>/g, "").trim()) {
+                contentStr = "<p>Document imported – no compatible text content found.</p>";
+            }
+
             onCreate(title.trim() || "Imported Document", contentStr);
         } catch (err) {
             console.error("Error processing file:", err);
-            alert("Error importing the file structure");
+            alert(`Could not import file: ${err instanceof Error ? err.message : String(err)}`);
         } finally {
             isProcessing = false;
         }
     }
 
-    onMount(() => inputEl?.focus());
+    /** Remove HTML elements that TipTap cannot render (images, SVG, video, etc.) */
+    function stripUnsupportedMedia(html: string): string {
+        return html
+            .replace(/<img\b[^>]*\/?>/gi, "")
+            .replace(/<picture\b[^>]*>[\s\S]*?<\/picture>/gi, "")
+            .replace(/<figure\b[^>]*>[\s\S]*?<\/figure>/gi, "")
+            .replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, "")
+            .replace(/<video\b[^>]*>[\s\S]*?<\/video>/gi, "")
+            .replace(/<audio\b[^>]*>[\s\S]*?<\/audio>/gi, "")
+            .replace(/<object\b[^>]*>[\s\S]*?<\/object>/gi, "")
+            .replace(/<embed\b[^>]*\/?>/gi, "")
+            .trim();
+    }
+
+
+    onMount(() => {
+        // Must be set client-side. The version correctly matches 4.4.168.
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+        inputEl?.focus();
+    });
 </script>
 
 <div class="backdrop" role="presentation" onclick={onClose}></div>
