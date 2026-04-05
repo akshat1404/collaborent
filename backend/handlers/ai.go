@@ -42,8 +42,8 @@ func buildPrompt(action, text string) (string, error) {
 	switch action {
 	case "fix grammar":
 		return fmt.Sprintf("Fix grammatical mistakes. Return only corrected text:\n\n%s", text), nil
-	case "translate to French":
-		return fmt.Sprintf("Translate to French. Return only the translation:\n\n%s", text), nil
+	case "translate to Hindi":
+		return fmt.Sprintf("Translate to Hindi. Return only the translation:\n\n%s", text), nil
 	case "make a table":
 		return fmt.Sprintf("Convert to a markdown table. Return only the table:\n\n%s", text), nil
 	case "summarise":

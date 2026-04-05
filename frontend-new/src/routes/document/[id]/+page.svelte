@@ -678,15 +678,15 @@
 
 			<button
 				class="bb ai-btn"
-				class:ai-loading={aiLoading === 'translate to French'}
+				class:ai-loading={aiLoading === 'translate to Hindi'}
 				disabled={!!aiLoading}
-				onclick={() => runAI('translate to French')}
-				title="Translate to French"
+				onclick={() => runAI('translate to Hindi')}
+				title="Translate to Hindi"
 			>
-				{#if aiLoading === 'translate to French'}
+				{#if aiLoading === 'translate to Hindi'}
 					<span class="ai-spin">⟳</span>
 				{:else}
-					✦ FR
+					✦ HI
 				{/if}
 			</button>
 
