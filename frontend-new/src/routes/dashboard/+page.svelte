@@ -103,6 +103,36 @@
         showModal = false;
         window.location.href = `/document/${doc.id}`;
     }
+
+    async function handleDocDelete(id: string, e?: Event) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        if (!confirm("Are you sure you want to delete this document?")) {
+            return;
+        }
+
+        const {
+            data: { session },
+        } = await supabase.auth.getSession();
+
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/documents/${id}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${session?.access_token}`,
+            },
+        });
+
+        if (!res.ok) {
+            alert("Failed to delete document");
+            return;
+        }
+
+        // Optimistically remove from state
+        documents = documents.filter(d => d.id !== id);
+    }
 </script>
 
 <svelte:head>
@@ -124,7 +154,7 @@
 {:else if user}
     <div class="page-wrapper">
         <Navbar onSignOut={signOut} onCreateDoc={createDocument} />
-        <DocumentsPage {documents} loading={docsLoading} />
+        <DocumentsPage {documents} loading={docsLoading} onDelete={handleDocDelete} />
     </div>
 {:else}
     <LoadingScreen message="Redirecting..." />

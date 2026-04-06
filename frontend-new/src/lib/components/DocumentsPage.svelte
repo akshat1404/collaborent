@@ -6,7 +6,7 @@
         created_at: string;
     };
 
-    let { documents = [], loading = false }: { documents: Document[]; loading: boolean } = $props();
+    let { documents = [], loading = false, onDelete }: { documents: Document[]; loading: boolean; onDelete?: (id: string, e: Event) => void } = $props();
 
     function formatDate(iso: string): string {
         if (!iso) return "";
@@ -91,6 +91,14 @@
                                 </defs>
                             </svg>
                         </div>
+                        {#if onDelete}
+                            <button class="delete-doc-btn" aria-label="Delete document" title="Delete" onclick={(e) => onDelete(doc.id, e)}>
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 6h18"></path>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        {/if}
                         <h3 class="doc-title">{doc.title || "Untitled"}</h3>
                         <p class="doc-excerpt">{excerpt(doc)}</p>
                     </div>
@@ -179,6 +187,34 @@
     }
     .doc-card:hover .card-accent {
         opacity: 1;
+    }
+
+    .delete-doc-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        color: #d1b9cd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0;
+        transition: all 0.2s ease;
+        z-index: 2;
+    }
+    
+    .doc-card:hover .delete-doc-btn {
+        opacity: 1;
+    }
+
+    .delete-doc-btn:hover {
+        background: rgba(225, 29, 72, 0.1);
+        color: #e11d48;
     }
 
     .card-body {

@@ -66,13 +66,15 @@ func main() {
 		}
 		documentHandler.ListByUser(w, r)
 	})))
-	// Prefix: /documents/{id} → GET by ID, PUT to update
+	// Prefix: /documents/{id} → GET by ID, PUT to update, DELETE to delete
 	http.HandleFunc("/documents/", cors(auth(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			documentHandler.GetByID(w, r)
 		case http.MethodPut:
 			documentHandler.Update(w, r)
+		case http.MethodDelete:
+			documentHandler.Delete(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}

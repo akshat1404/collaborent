@@ -194,3 +194,41 @@ func (h *DocumentHandler) ListByUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(docs)
 }
+
+// DELETE /documents/{id} — deletes a document
+func (h *DocumentHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	ownerID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) < 3 || parts[2] == "" {
+		http.Error(w, "Document ID required", http.StatusBadRequest)
+		return
+	}
+	id := parts[2]
+
+	oid, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		http.Error(w, "Invalid document ID", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Ensure the document belongs to the current user
+	res, err := h.documents.DeleteOne(ctx, bson.M{"_id": oid, "ownerId": ownerID})
+	if err != nil {
+		http.Error(w, "Failed to delete document", http.StatusInternalServerError)
+		return
+	}
+	if res.DeletedCount == 0 {
+		http.Error(w, "Document not found or unauthorized", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
