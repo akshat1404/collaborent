@@ -5,6 +5,10 @@
 
 ---
 
+**If you find this project useful or find it interesting enough to clone and make it your own, consider starring the repo — it genuinely helps!**
+
+---
+
 ## Overview
 
 Cascade is a real-time collaborative document editing platform. Users authenticate securely via Google OAuth (powered by Supabase), and their sessions are validated server-side by a Go backend before any data is persisted to MongoDB.
