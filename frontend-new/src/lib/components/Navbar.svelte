@@ -10,6 +10,9 @@
 <nav class="navbar">
     <span class="navbar-brand">Cascade</span>
     <div class="navbar-actions">
+        <a class="btn-docs" href="/docs" target="_blank" rel="noopener noreferrer">
+            Docs
+        </a>
         <button class="btn-create" id="create-doc-btn" onclick={onCreateDoc}>
             <span class="btn-icon">+</span> Create
         </button>
@@ -86,6 +89,7 @@
         line-height: 1;
     }
 
+    .btn-docs,
     .btn-signout {
         padding: 0.45rem 1.1rem;
         border-radius: 999px;
@@ -101,14 +105,17 @@
             background 0.18s ease,
             border-color 0.18s ease,
             transform 0.18s ease;
+        text-decoration: none;
     }
 
+    .btn-docs:hover,
     .btn-signout:hover {
         background: rgba(236, 72, 153, 0.12);
         border-color: rgba(236, 72, 153, 0.6);
         transform: translateY(-1px);
     }
 
+    .btn-docs:active,
     .btn-signout:active {
         transform: translateY(0);
     }
