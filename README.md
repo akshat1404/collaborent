@@ -39,8 +39,9 @@ The project is intentionally kept full-stack and minimal at its core — authent
 | Frontend | [SvelteKit](https://kit.svelte.dev/) (Svelte 5, TypeScript, Vite) |
 | Backend | [Go](https://go.dev/) 1.22 — standard `net/http` |
 | Auth | [Supabase](https://supabase.com/) + Google OAuth 2.0 |
-| JWT Validation | `golang-jwt/jwt` + `MicahParks/keyfunc` (JWKS) |
 | Database | [MongoDB](https://www.mongodb.com/) (via `mongo-driver/v2`) |
+| Editor | [TipTap](https://tiptap.dev/) (ProseMirror based rich-text editor) |
+| AI Inference | [Groq](https://groq.com/) API (llama-3.1-8b-instant model) |
 | Styling | Vanilla CSS — glassmorphism, pinkish theme |
 
 ---
@@ -111,6 +112,7 @@ go run main.go
 SUPABASE_URL=https://<your-project>.supabase.co
 MONGODB_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/
 MONGODB_DB=cascade
+GROQ_API_KEY=<your-groq-api-key>
 ```
 
 ---
@@ -145,8 +147,30 @@ PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
 |---|---|---|
 | `GET` | `/health` | Health check — returns `{ "status": "ok" }` |
 | `POST` | `/auth/callback` | Validates JWT and upserts user into MongoDB |
+| `GET` | `/documents` | Lists all documents belonging to the user |
+| `POST` | `/documents/create` | Creates a new document |
+| `GET`, `PUT`, `DELETE` | `/documents/{id}` | Fetches, updates, or deletes a specific document |
+| `POST` | `/ai/process` | Processes text using the Groq AI API (`llama-3.1`) |
 
 All endpoints use CORS middleware permitting `http://localhost:5173` during development.
+
+---
+
+## Editor & AI Features
+
+The core document editor runs on **TipTap**. It includes standard rich text formatting and introduces native AI intelligence directly in the editor.
+
+When text is selected, a floating AI Bubble appears above the formatting tools, allowing the user to seamlessly use Groq's fast inference to edit content:
+
+- ✦ **Fix grammar**: Automatically fixes grammatical errors.
+- ✦ **Translate to Hindi**: Quickly translates the selection.
+- ✦ **Make a table**: Intelligently formats selected text into a markdown table.
+- ✦ **Summarise**: Condenses the selected text into 2-3 sentences.
+- ✦ **Ask AI**: Opens a modal where the user can type free-form instructions (e.g. *"This is code, format it properly"*), which instructs the AI exactly how to rewrite the selected text.
+
+The Go backend safely takes the user request, verifies the user token, securely constructs the prompts, and proxies the request to the Groq API. Content returned by Groq is rendered from Markdown into native ProseMirror HTML directly in the editor.
+
+Cascade also natively supports **Document Imports**. You can upload `.docx` or `.pdf` files from the Dashboard, which are locally parsed into text/HTML and converted into a new Cascade document.
 
 ---
 
@@ -170,8 +194,11 @@ I document the engineering decisions and concepts behind this project on Medium.
 - [x] JWT validation in Go backend
 - [x] User upsert into MongoDB
 - [x] Dashboard UI — component-based (Navbar, DocumentsPage, LoadingScreen)
-- [ ] Document creation & persistence
-- [ ] Real-time collaborative editing
+- [x] Document creation, persistence, and deletion
+- [x] Rich Text Editor implementation (TipTap)
+- [x] Word Document (`.docx`) and PDF Import functionality
+- [x] Floating AI Assistant (Groq `llama-3.1-8b-instant`) — Grammar, Translate, Summarize, Custom Prompts
+- [ ] Real-time collaborative editing using WebSockets / Yjs
 - [ ] Document sharing & permissions
 
 ---
