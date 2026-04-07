@@ -10,7 +10,7 @@
 <nav class="navbar">
     <span class="navbar-brand">Cascade</span>
     <div class="navbar-actions">
-        <a class="btn-docs" href="/docs" target="_blank" rel="noopener noreferrer">
+        <a class="btn-docs" href="https://cascade-docs-seven.vercel.app/" target="_blank" rel="noopener noreferrer">
             Docs
         </a>
         <button class="btn-create" id="create-doc-btn" onclick={onCreateDoc}>
