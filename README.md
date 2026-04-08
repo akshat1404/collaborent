@@ -1,7 +1,7 @@
 # Cascade
 
-> A collaborative document editor — built with SvelteKit, Go, Supabase, and MongoDB.
-> <a href="https://collaborent.vercel.app" target="_blank">Access Link</a>
+> A rich text editor — built with SvelteKit, Go, Supabase, and MongoDB.
+> <a href="https://collaborent.vercel.app" target="_blank">Access Link</a> | <a href="https://cascade-docs-seven.vercel.app/" target="_blank">Interactive Docs</a>
 
 ---
 
