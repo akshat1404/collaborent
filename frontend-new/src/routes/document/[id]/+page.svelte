@@ -645,31 +645,6 @@
 					>
 				</div>
 			</div>
-
-			<div class="toolbar-section">
-				<span class="section-label">Insert</span>
-				<!-- Hidden file input -->
-				<input
-					type="file"
-					accept="image/*"
-					class="img-file-input"
-					bind:this={imageFileInput}
-					onchange={handleImageFile}
-				/>
-				<button
-					class="tool-btn img-insert-btn"
-					class:img-uploading={imageUploading}
-					disabled={imageUploading}
-					onclick={triggerImageUpload}
-					title="Insert image"
-				>
-					{#if imageUploading}
-						<span class="ai-spin">⟳</span>
-					{:else}
-						🖼 Image
-					{/if}
-				</button>
-			</div>
 		</div>
 	</aside>
 
@@ -691,6 +666,28 @@
 				>
 					{saveStatus}
 				</span>
+
+				<!-- Hidden file input lives here in the header -->
+				<input
+					type="file"
+					accept="image/*"
+					class="img-file-input"
+					bind:this={imageFileInput}
+					onchange={handleImageFile}
+				/>
+				<button
+					class="header-img-btn"
+					class:header-img-btn-loading={imageUploading}
+					disabled={imageUploading}
+					onclick={triggerImageUpload}
+					title="Insert image"
+				>
+					{#if imageUploading}
+						<span class="ai-spin">⟳</span> Uploading…
+					{:else}
+						🖼 Insert Image
+					{/if}
+				</button>
 
 				<div class="export-container">
 					<button class="export-btn" onclick={toggleExportMenu}>
@@ -1791,26 +1788,31 @@
 		display: none;
 	}
 
-	/* ── Insert Image button ─────────────────── */
-	.img-insert-btn {
-		width: 100%;
-		justify-content: flex-start;
-		gap: 6px;
+	/* ── Header Insert Image button ─────────────────── */
+	.header-img-btn {
+		padding: 8px 16px;
 		font-size: 13px;
-		padding: 0 10px;
-		background: linear-gradient(135deg, rgba(168, 85, 247, 0.06) 0%, rgba(244, 114, 182, 0.04) 100%);
-		border-color: rgba(168, 85, 247, 0.35);
+		font-weight: 600;
+		border: 1px solid rgba(168, 85, 247, 0.45);
+		border-radius: 8px;
+		background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(244, 114, 182, 0.05) 100%);
 		color: #7c3aed;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		white-space: nowrap;
 		transition: all 0.15s;
 	}
-	.img-insert-btn:hover:not(:disabled) {
-		background: linear-gradient(135deg, rgba(168, 85, 247, 0.18) 0%, rgba(244, 114, 182, 0.1) 100%);
+	.header-img-btn:hover:not(:disabled) {
+		background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(244, 114, 182, 0.12) 100%);
 		border-color: #a855f7;
 		color: #a855f7;
-		box-shadow: 0 2px 8px rgba(168, 85, 247, 0.2);
+		box-shadow: 0 2px 10px rgba(168, 85, 247, 0.25);
 	}
-	.img-uploading {
-		opacity: 0.7;
+	.header-img-btn-loading,
+	.header-img-btn:disabled {
+		opacity: 0.65;
 		cursor: not-allowed;
 	}
 
