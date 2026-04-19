@@ -2,6 +2,7 @@
     import { onMount } from "svelte";
     import * as mammoth from "mammoth";
     import * as pdfjsLib from "pdfjs-dist";
+    import { stripUnsupportedMedia, stripExtension } from "$lib/utils";
 
     interface Props {
         onClose: () => void;
@@ -38,7 +39,7 @@
         isProcessing = true;
 
         if (!title.trim()) {
-            title = file.name.replace(/\.[^/.]+$/, "");
+            title = stripExtension(file.name);
         }
 
         try {
@@ -94,20 +95,6 @@
         } finally {
             isProcessing = false;
         }
-    }
-
-    /** Remove HTML elements that TipTap cannot render (images, SVG, video, etc.) */
-    function stripUnsupportedMedia(html: string): string {
-        return html
-            .replace(/<img\b[^>]*\/?>/gi, "")
-            .replace(/<picture\b[^>]*>[\s\S]*?<\/picture>/gi, "")
-            .replace(/<figure\b[^>]*>[\s\S]*?<\/figure>/gi, "")
-            .replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, "")
-            .replace(/<video\b[^>]*>[\s\S]*?<\/video>/gi, "")
-            .replace(/<audio\b[^>]*>[\s\S]*?<\/audio>/gi, "")
-            .replace(/<object\b[^>]*>[\s\S]*?<\/object>/gi, "")
-            .replace(/<embed\b[^>]*\/?>/gi, "")
-            .trim();
     }
 
 

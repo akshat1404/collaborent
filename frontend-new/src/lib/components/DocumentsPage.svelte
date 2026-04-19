@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { formatDate, excerpt, docCountLabel, resolveDocTitle } from "$lib/utils";
+
     type Document = {
         id: string;
         title: string;
@@ -7,21 +9,6 @@
     };
 
     let { documents = [], loading = false, onDelete }: { documents: Document[]; loading: boolean; onDelete?: (id: string, e: Event) => void } = $props();
-
-    function formatDate(iso: string): string {
-        if (!iso) return "";
-        const d = new Date(iso);
-        return d.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-        });
-    }
-
-    function excerpt(doc: Document): string {
-        // No content preview available without loading full doc — show title as fallback
-        return "Open to view content";
-    }
 </script>
 
 <div class="documents-page">
@@ -70,7 +57,7 @@
     {:else}
         <div class="section-header">
             <h2 class="section-title">Your Documents</h2>
-            <span class="doc-count">{documents.length} document{documents.length === 1 ? "" : "s"}</span>
+            <span class="doc-count">{docCountLabel(documents.length)}</span>
         </div>
         <div class="docs-grid">
             {#each documents as doc (doc.id)}
@@ -99,8 +86,8 @@
                                 </svg>
                             </button>
                         {/if}
-                        <h3 class="doc-title">{doc.title || "Untitled"}</h3>
-                        <p class="doc-excerpt">{excerpt(doc)}</p>
+                        <h3 class="doc-title">{resolveDocTitle(doc.title)}</h3>
+                        <p class="doc-excerpt">{excerpt()}</p>
                     </div>
                     <div class="card-footer">
                         <span class="doc-date">Edited {formatDate(doc.updated_at)}</span>
